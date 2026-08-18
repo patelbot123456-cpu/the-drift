@@ -29,8 +29,8 @@ html,body{height:100%;overflow:hidden;background:var(--navy);
 #event{position:fixed;top:22%;left:0;right:0;z-index:5;text-align:center;pointer-events:none;
   font-size:clamp(15px,2.6vw,20px);font-style:italic;color:#f0e7d2;text-shadow:0 2px 18px rgba(0,0,0,.9);
   opacity:0;transition:opacity .5s;padding:0 20px}
-#hint{position:fixed;bottom:16px;left:0;right:0;z-index:5;text-align:center;pointer-events:none;
-  font-size:10px;letter-spacing:.4em;text-transform:uppercase;color:#5f7270}
+#hint{position:fixed;bottom:44px;left:0;right:0;z-index:5;text-align:center;pointer-events:none;
+  font-size:10px;letter-spacing:.4em;text-transform:uppercase;color:#7d918e}
 /* overlays */
 .overlay{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;justify-content:center;align-items:center;
   background:radial-gradient(ellipse at 50% 60%,rgba(8,20,24,.55) 0%,rgba(8,20,24,.92) 75%);padding:24px;text-align:center}
@@ -377,6 +377,7 @@ function start(){
   S.whaleX = -1; S.whaleNext = 38 + Math.random() * 18; S.jar = null;
   S.drops = []; S.lastNight = 0;
   $("title").style.display = "none"; $("over").style.display = "none";
+  $("hint").style.display = "none";
   hud.style.display = "flex";
   nightN.textContent = 1;
   say("Night one. Keep the wick trimmed.", 3000);
@@ -484,8 +485,11 @@ $("again-btn").addEventListener("click", e => { e.stopPropagation(); start(); })
 
 /* debug hook (used by the agent's Playwright checks) */
 window.__lamp = {
-  state: () => ({ mode: S.mode, t: +S.t.toFixed(2), F: +S.F.toFixed(1), best: S.best }),
-  feed, start, setFlame: v => { S.F = Math.max(0, Math.min(100, v)); }
+  state: () => ({ mode: S.mode, t: +S.t.toFixed(2), F: +S.F.toFixed(1), best: S.best,
+    whale: S.whaleX >= 0 ? +S.whaleX.toFixed(2) : -1, jar: !!S.jar }),
+  feed, start, setFlame: v => { S.F = Math.max(0, Math.min(100, v)); },
+  spawnWhale: () => { S.whaleNext = S.t + 0.2; },
+  giveJar: () => { S.jar = { until: performance.now() + 2000 }; }
 };
 </script>
 </body>
