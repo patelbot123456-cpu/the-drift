@@ -316,9 +316,9 @@ function draw(ts, dt){
 
 function drawLamp(t, F, dt){
   const baseY = H * 0.86, lampH = H * 0.34, cxr = W / 2;
-  const flick = flick(t);
-  const fh = 10 + (F / 100) * (lampH * 0.42) + flick * 4 * (0.4 + F / 100);
-  const fw = 10 + (F / 100) * 16 + flick * 2;
+  const fl = flick(t);
+  const fh = 10 + (F / 100) * (lampH * 0.42) + fl * 4 * (0.4 + F / 100);
+  const fw = 10 + (F / 100) * 16 + fl * 2;
   // pedestal
   cx.fillStyle = "#0c1d23";
   cx.fillRect(cxr - 46, baseY, 92, H - baseY);
@@ -342,7 +342,7 @@ function drawLamp(t, F, dt){
   cx.moveTo(cxr - 44, topY + 28); cx.lineTo(cxr, topY - 14); cx.lineTo(cxr + 44, topY + 28); cx.closePath(); cx.fill();
   cx.fillRect(cxr - 30, topY + 26, 60, 5);
   // glow
-  const glowR = 60 + (F / 100) * 190 + flick * 6;
+  const glowR = 60 + (F / 100) * 190 + fl * 6;
   let g = cx.createRadialGradient(cxr, baseY - lampH * 0.45, 4, cxr, baseY - lampH * 0.45, glowR);
   g.addColorStop(0, "rgba(255,196,110," + (0.5 + F / 260) + ")");
   g.addColorStop(0.4, "rgba(255,164,70," + (0.16 + F / 500) + ")");
@@ -350,7 +350,7 @@ function drawLamp(t, F, dt){
   cx.fillStyle = g; cx.beginPath(); cx.arc(cxr, baseY - lampH * 0.45, glowR, 0, 7); cx.fill();
   // flame
   const fy = baseY - 18;
-  const flut = (S.mode === "play" && S.t < S.gustUntil) ? flick * 14 : flick * 5;
+  const flut = (S.mode === "play" && S.t < S.gustUntil) ? fl * 14 : fl * 5;
   g = cx.createRadialGradient(cxr, fy - fh * 0.5, 2, cxr, fy - fh * 0.5, fh);
   g.addColorStop(0, "#fff7e0"); g.addColorStop(0.35, "#ffd98c"); g.addColorStop(0.75, "rgba(255,150,60,0.75)"); g.addColorStop(1, "rgba(255,120,40,0)");
   cx.fillStyle = g;
