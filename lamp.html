@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>The Ninth Lamp — a small game for the keeper's hands</title>
+<style>
+:root{
+  --ink:#241a10; --ink-soft:#4a3a28;
+  --paper:#ece0c8; --paper-2:#e3d5b8;
+  --navy:#081418; --teal:#4be0d2; --amber:#ffb454; --amber-dim:#c98a3e;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:var(--navy);
+  font-family:Georgia,"Times New Roman",serif;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+#sea{position:fixed;inset:0;display:block}
+/* HUD */
+#hud{position:fixed;top:0;left:0;right:0;z-index:5;display:none;justify-content:space-between;align-items:flex-start;
+  padding:14px 18px;pointer-events:none}
+.hud-box{color:#cfd8d4;text-shadow:0 2px 10px rgba(0,0,0,.8)}
+.night{font-size:11px;letter-spacing:.4em;text-transform:uppercase;color:var(--teal)}
+.night b{font-size:22px;letter-spacing:.1em;color:#f5ecd9;display:block;margin-top:2px}
+.oil-wrap{margin-top:10px;width:150px}
+.oil-label{font-size:9px;letter-spacing:.35em;text-transform:uppercase;color:#9fb3af}
+.oil-bar{margin-top:5px;height:8px;border:1px solid rgba(255,180,84,.5);border-radius:2px;background:rgba(8,20,24,.6);overflow:hidden}
+#oil-fill{height:100%;width:60%;background:linear-gradient(90deg,#7a4d12,var(--amber),#ffe1a8);box-shadow:0 0 12px rgba(255,180,84,.7);transition:width .12s linear}
+.best{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:#9fb3af;text-align:right}
+.best b{display:block;font-size:18px;color:var(--amber);letter-spacing:.1em;margin-top:2px}
+#event{position:fixed;top:22%;left:0;right:0;z-index:5;text-align:center;pointer-events:none;
+  font-size:clamp(15px,2.6vw,20px);font-style:italic;color:#f0e7d2;text-shadow:0 2px 18px rgba(0,0,0,.9);
+  opacity:0;transition:opacity .5s;padding:0 20px}
+#hint{position:fixed;bottom:16px;left:0;right:0;z-index:5;text-align:center;pointer-events:none;
+  font-size:10px;letter-spacing:.4em;text-transform:uppercase;color:#5f7270}
+/* overlays */
+.overlay{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;justify-content:center;align-items:center;
+  background:radial-gradient(ellipse at 50% 60%,rgba(8,20,24,.55) 0%,rgba(8,20,24,.92) 75%);padding:24px;text-align:center}
+.back{position:absolute;top:18px;left:22px;font-size:10px;letter-spacing:.35em;text-transform:uppercase;color:#9fb3af;text-decoration:none}
+.back:hover{color:var(--amber)}
+.overlay .kicker{font-size:11px;letter-spacing:.55em;text-transform:uppercase;color:var(--amber);margin-bottom:18px}
+.overlay h1{font-size:clamp(40px,9vw,84px);font-weight:400;letter-spacing:.06em;color:#f5ecd9;line-height:1.05;text-shadow:0 4px 40px rgba(0,0,0,.7)}
+.overlay h1 em{font-style:italic;color:var(--teal);text-shadow:0 0 30px rgba(75,224,210,.45)}
+.overlay .sub{margin-top:18px;font-style:italic;font-size:clamp(14px,2.4vw,17px);color:#cfd8d4;max-width:520px;line-height:1.7}
+.rules{margin-top:26px;font-size:13px;color:#9fb3af;line-height:2;max-width:480px}
+.rules span{color:#e8dfca}
+button.go{margin-top:34px;font-family:inherit;font-size:13px;letter-spacing:.35em;text-transform:uppercase;
+  padding:16px 38px;border-radius:3px;border:1px solid var(--amber-dim);color:#3a2c17;cursor:pointer;
+  background:linear-gradient(180deg,#ffcf8a,var(--amber));box-shadow:0 4px 24px rgba(255,180,84,.4);transition:transform .12s}
+button.go:hover{transform:translateY(-2px)}
+.score-line{margin-top:22px;font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--teal)}
+.score-line b{color:#f5ecd9;font-size:15px}
+.fine{position:fixed;bottom:14px;left:0;right:0;z-index:11;font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:#5f7270;text-align:center;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="sea"></canvas>
+
+<div id="hud">
+  <div class="hud-box">
+    <div class="night">Night <b id="night-n">1</b></div>
+    <div class="oil-wrap">
+      <div class="oil-label">Lamp oil</div>
+      <div class="oil-bar"><div id="oil-fill"></div></div>
+    </div>
+  </div>
+  <div class="hud-box best">Longest watch<b id="best-n">0</b></div>
+</div>
+<div id="event"></div>
+<div id="hint">tap or space — trim the wick</div>
+
+<div class="overlay" id="title">
+  <a href="./" class="back">← back to the lamp log</a>
+  <div class="kicker">The Drift · a side log</div>
+  <h1>THE NINTH<br><em>LAMP</em></h1>
+  <div class="sub">A small game for the keeper's hands. The lamp is yours now. Don't let it die — it has seen too much.</div>
+  <div class="rules">
+    <span>Tap</span> (or <span>space</span>) to trim the wick and feed the flame.<br>
+    The wind comes without asking. The unraveling creeps in from the edges.<br>
+    When a <span>drift-whale</span> passes, it may leave a jar. Catch it.<br>
+    Every 25 seconds is a night. Keep the light as long as you can.
+  </div>
+  <button class="go" id="start-btn">Begin the watch</button>
+</div>
+
+<div class="overlay" id="over" style="display:none">
+  <div class="kicker">The sea keeps its own record</div>
+  <h1>THE LAMP<br><em>WENT OUT</em></h1>
+  <div class="sub" id="over-line">The sea does not notice. You will.</div>
+  <div class="score-line">Nights kept <b id="score-n">0</b> &nbsp;·&nbsp; Longest watch <b id="best-n2">0</b></div>
+  <button class="go" id="again-btn">Trim again</button>
+</div>
+
+<div class="fine">THE NINTH LAMP · A GAME OF THE DRIFT · KEPT BY WREN VOSS, KEEPER OF THE NINTH LAMP</div>
+
+<script>
+"use strict";
+/* ============ The Ninth Lamp — one-button keeper ============ */
+const cv = document.getElementById("sea");
+const cx = cv.getContext("2d");
+let W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2);
+function size(){
+  W = innerWidth; H = innerHeight;
+  cv.width = W * DPR; cv.height = H * DPR;
+  cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+addEventListener("resize", size); size();
+
+const $ = id => document.getElementById(id);
+const hud = $("hud"), eventEl = $("event"), oilFill = $("oil-fill");
+const nightN = $("night-n"), bestN = $("best-n"), bestN2 = $("best-n2"), scoreN = $("score-n"), overLine = $("over-line");
+
+/* ---------- state ---------- */
+const NIGHT = 25;               // seconds per night
+const S = {
+  mode: "title",                // title | play | over
+  t: 0, F: 55,                  // time, flame 0..100
+  feedCd: 0,
+  gustUntil: 0, nextGust: 9,
+  whaleX: -1, whaleNext: 42, whaleDur: 6,
+  jar: null,                    // {until, x, y}
+  songUntil: 0,
+  best: 0,
+  drops: [],                    // oil drop animations
+  msgUntil: 0,
+};
+try { S.best = +localStorage.getItem("drift_lamp_best") || 0; } catch(e){}
+bestN.textContent = S.best; bestN2.textContent = S.best;
+
+/* ---------- Wren's quips ---------- */
+const QUIPS = [
+  "The light holds. For now.",
+  "Still there. The cat approves, reluctantly.",
+  "The sea is watching. It is always watching.",
+  "Begin to suspect the flame is fond of you. Do not get attached.",
+  "Somewhere a bridge is singing. Do not answer it.",
+  "The oil is a number. The light is not. Keep the number up.",
+  "A keeper does not ask the lamp to stay. The keeper stays.",
+  "If the unraveling asks for the light, tell it to come and take it. It is too polite.",
+  "You have kept a light longer than most keepers keep a grudge.",
+  "There is no quip for this. You have gone past the words. Keep the lamp."
+];
+const OVERLINES = [
+  "The sea does not notice. You will.",
+  "The dark is patient. It had all the time in the world. It used a little of it.",
+  "The lamp says goodnight to you, which is worse.",
+  "The unraveling files it under 'expected.' It is not comforting.",
+  "Somewhere, a keeper trims a wick and does not look up. That is how it is done."
+];
+
+function say(msg, ms = 3200){
+  eventEl.textContent = msg;
+  eventEl.style.opacity = 1;
+  S.msgUntil = performance.now() + ms;
+}
+
+/* ---------- audio (tiny, lazy, fail-safe) ---------- */
+let AC = null;
+function beep(freq, ms, type, vol){
+  try {
+    if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, AC.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + ms / 1000);
+    o.connect(g); g.connect(AC.destination);
+    o.start(); o.stop(AC.currentTime + ms / 1000);
+  } catch(e){}
+}
+const sfx = {
+  feed(){ beep(720 + Math.random() * 240, 70, "triangle", 0.05); },
+  catch(){ beep(520, 90, "sine", 0.09); setTimeout(() => beep(780, 140, "sine", 0.09), 90); },
+  wind(){ beep(140, 600, "sine", 0.03); },
+  over(){ beep(110, 900, "sine", 0.1); setTimeout(() => beep(73, 1200, "sine", 0.08), 300); }
+};
+
+/* ---------- scene bits ---------- */
+const flies = [];
+for (let i = 0; i < 26; i++) flies.push({
+  x: Math.random(), y: Math.random() * 0.8, p: Math.random() * 7, s: 0.3 + Math.random() * 0.7
+});
+const islands = [
+  { x: 0.12, w: 0.16, h: 0.030, drift: 0.0012 },
+  { x: 0.55, w: 0.22, h: 0.040, drift: 0.0008 },
+  { x: 0.86, w: 0.12, h: 0.024, drift: 0.0016 }
+];
+const threads = [];   // unraveling threads
+for (let i = 0; i < 26; i++){
+  const side = i % 4; // 0 left, 1 right, 2 top, 3 bottom
+  const off = Math.random();
+  threads.push({ side, off, len: 0.12 + Math.random() * 0.3, ph: Math.random() * 9, wob: 0.4 + Math.random() });
+}
+
+function flick(t){ return Math.sin(t * 13) * 0.5 + Math.sin(t * 29 + 1.7) * 0.3 + Math.sin(t * 7.3) * 0.2; }
+
+/* ---------- drawing ---------- */
+function draw(ts, dt){
+  const t = ts / 1000;
+  // sky
+  let g = cx.createLinearGradient(0, 0, 0, H * 0.66);
+  g.addColorStop(0, "#050d11"); g.addColorStop(0.7, "#0a1a20"); g.addColorStop(1, "#0e242c");
+  cx.fillStyle = g; cx.fillRect(0, 0, W, H * 0.66);
+  // stars
+  cx.fillStyle = "rgba(220,235,235,0.5)";
+  for (let i = 0; i < 40; i++){
+    const sx = ((i * 971) % 1000) / 1000 * W, sy = ((i * 577) % 620) / 1000 * H * 0.4;
+    const tw = 0.25 + 0.55 * Math.abs(Math.sin(t * 0.7 + i));
+    cx.globalAlpha = tw * 0.7; cx.fillRect(sx, sy, 1.4, 1.4);
+  }
+  cx.globalAlpha = 1;
+  const horizon = H * 0.62;
+  // sea
+  g = cx.createLinearGradient(0, horizon, 0, H);
+  g.addColorStop(0, "#0b2026"); g.addColorStop(1, "#041014");
+  cx.fillStyle = g; cx.fillRect(0, horizon, W, H - horizon);
+  // lamp glow on water
+  const F = S.mode === "play" ? S.F : 55;
+  const lampX = W / 2, lampGlow = 0.25 + (F / 100) * 0.55;
+  g = cx.createRadialGradient(lampX, horizon, 10, lampX, horizon, W * (0.2 + lampGlow * 0.3));
+  g.addColorStop(0, "rgba(255,190,110," + (0.16 + lampGlow * 0.2) + ")");
+  g.addColorStop(1, "rgba(255,190,110,0)");
+  cx.fillStyle = g; cx.fillRect(0, horizon - 40, W, H - horizon + 40);
+  // glowing waves
+  for (let i = 0; i < 7; i++){
+    const wy = horizon + 14 + i * (H - horizon) * 0.11;
+    cx.strokeStyle = "rgba(75,224,210," + (0.10 - i * 0.011) + ")";
+    cx.lineWidth = 1.4; cx.beginPath();
+    for (let x = 0; x <= W; x += 14){
+      const y = wy + Math.sin(x * 0.012 + t * (0.7 + i * 0.12) + i * 2.1) * (2.5 + i * 1.1);
+      x === 0 ? cx.moveTo(x, y) : cx.lineTo(x, y);
+    }
+    cx.stroke();
+  }
+  // islands (drifting)
+  for (const il of islands){
+    il.x += il.drift * dt; if (il.x > 1.1) il.x = -0.15;
+    const ix = il.x * W, iw = il.w * W, ih = il.h * H;
+    cx.fillStyle = "#04141a";
+    cx.beginPath();
+    cx.moveTo(ix, horizon + 2);
+    cx.quadraticCurveTo(ix + iw * 0.2, horizon - ih, ix + iw * 0.5, horizon - ih * 0.8);
+    cx.quadraticCurveTo(ix + iw * 0.8, horizon - ih * 0.5, ix + iw, horizon + 2);
+    cx.closePath(); cx.fill();
+    // a tiny light on the island
+    cx.fillStyle = "rgba(255,180,84," + (0.5 + 0.4 * Math.sin(t * 1.3 + il.x * 20)) + ")";
+    cx.fillRect(ix + iw * 0.48, horizon - ih * 0.9, 2, 2);
+  }
+  // whale
+  if (S.mode === "play" && S.whaleX >= 0 && S.whaleX <= 1){
+    const wx = S.whaleX * (W + 400) - 200, wy = horizon - 8 + Math.sin(t * 1.4) * 5;
+    cx.save(); cx.translate(wx, wy);
+    cx.fillStyle = "#0d2a30";
+    cx.beginPath(); cx.ellipse(0, 0, 90, 26, 0, 0, Math.PI * 2); cx.fill();
+    cx.beginPath(); cx.moveTo(82, -6); cx.quadraticCurveTo(120, -34, 118, -6);
+    cx.quadraticCurveTo(120, 20, 82, 8); cx.closePath(); cx.fill();
+    // the garden-bearer's cargo: a cottage
+    cx.fillStyle = "#12333a"; cx.fillRect(-34, -46, 34, 22);
+    cx.fillStyle = "#173f47"; cx.beginPath(); cx.moveTo(-38, -46); cx.lineTo(-17, -60); cx.lineTo(4, -46); cx.closePath(); cx.fill();
+    cx.fillStyle = "rgba(255,180,84," + (0.6 + 0.3 * Math.sin(t * 2.2)) + ")"; cx.fillRect(-26, -40, 5, 6);
+    cx.restore();
+  }
+  // fireflies
+  for (const f of flies){
+    f.x += (0.006 * f.s) * dt; f.y += Math.sin(t * 0.5 + f.p) * 0.0006;
+    if (f.x > 1.05) f.x = -0.05;
+    const a = 0.25 + 0.6 * Math.abs(Math.sin(t * 1.1 + f.p));
+    cx.fillStyle = "rgba(255,205,120," + a * 0.8 + ")";
+    cx.beginPath(); cx.arc(f.x * W, f.y * horizon, 1.3 + f.s, 0, 7); cx.fill();
+  }
+  // wind streaks
+  if (S.mode === "play" && S.t < S.gustUntil){
+    cx.strokeStyle = "rgba(180,225,225,0.14)"; cx.lineWidth = 1;
+    for (let i = 0; i < 8; i++){
+      const wx = ((t * 0.55 + i * 0.13) % 1.2 - 0.1) * W;
+      const wy = (0.12 + (i * 0.09) % 0.5) * H;
+      cx.beginPath(); cx.moveTo(wx, wy); cx.lineTo(wx + 60 + i * 8, wy + 8); cx.stroke();
+    }
+  }
+  // unraveling threads
+  const creep = S.mode === "play" ? Math.min(1, S.t / 240) : 0.12;
+  cx.save();
+  cx.strokeStyle = "rgba(88,38,120," + (0.25 + creep * 0.5) + ")";
+  cx.shadowColor = "rgba(120,50,180,0.5)"; cx.shadowBlur = 8 + creep * 14; cx.lineWidth = 1.2;
+  for (const th of threads){
+    const L = th.len * (0.25 + creep * 0.75) * Math.max(W, H) * 0.5;
+    const wob = Math.sin(t * th.wob + th.ph) * 14 * creep;
+    cx.beginPath();
+    if (th.side === 0){ cx.moveTo(0, th.off * H); cx.lineTo(L + wob, th.off * H + wob * 0.5); }
+    else if (th.side === 1){ cx.moveTo(W, th.off * H); cx.lineTo(W - L - wob, th.off * H - wob * 0.5); }
+    else if (th.side === 2){ cx.moveTo(th.off * W, 0); cx.lineTo(th.off * W + wob * 0.5, L + wob); }
+    else { cx.moveTo(th.off * W, H); cx.lineTo(th.off * W - wob * 0.5, H - L - wob); }
+    cx.stroke();
+  }
+  cx.restore();
+  // the lamp (foreground)
+  drawLamp(t, F, dt);
+  // oil drops
+  for (let i = S.drops.length - 1; i >= 0; i--){
+    const d = S.drops[i]; d.y += 520 * dt; d.life -= dt;
+    if (d.life <= 0 || d.y > H * 0.62){ S.drops.splice(i, 1); continue; }
+    cx.fillStyle = "rgba(255,196,110," + Math.min(1, d.life * 2) + ")";
+    cx.beginPath(); cx.ellipse(d.x, d.y, 3, 5, 0, 0, 7); cx.fill();
+  }
+  // jar (whale gift)
+  if (S.jar){
+    const j = S.jar, bob = Math.sin(t * 3) * 4;
+    cx.save(); cx.translate(W / 2 + 46, H * 0.42 + bob);
+    cx.shadowColor = "rgba(255,180,84,0.9)"; cx.shadowBlur = 18;
+    cx.fillStyle = "#ffb454";
+    cx.beginPath(); cx.ellipse(0, 0, 9, 12, 0, 0, 7); cx.fill();
+    cx.fillStyle = "#8a5a1c"; cx.fillRect(-4, -18, 8, 8);
+    cx.restore();
+    // pulse ring
+    cx.strokeStyle = "rgba(255,210,140," + (0.4 + 0.4 * Math.sin(t * 5)) + ")";
+    cx.beginPath(); cx.arc(W / 2 + 46, H * 0.42 + bob, 20 + 4 * Math.sin(t * 5), 0, 7); cx.stroke();
+  }
+}
+
+function drawLamp(t, F, dt){
+  const baseY = H * 0.86, lampH = H * 0.34, cxr = W / 2;
+  const flick = flick(t);
+  const fh = 10 + (F / 100) * (lampH * 0.42) + flick * 4 * (0.4 + F / 100);
+  const fw = 10 + (F / 100) * 16 + flick * 2;
+  // pedestal
+  cx.fillStyle = "#0c1d23";
+  cx.fillRect(cxr - 46, baseY, 92, H - baseY);
+  cx.fillStyle = "#123039"; cx.fillRect(cxr - 54, baseY - 6, 108, 10);
+  // the cat (right side, watching)
+  const catX = cxr + 76, catY = baseY - 4;
+  cx.fillStyle = "#050f13";
+  cx.beginPath(); cx.ellipse(catX, catY, 12, 8, 0, Math.PI, 0); cx.fill();
+  cx.beginPath(); cx.moveTo(catX - 8, catY - 4); cx.lineTo(catX - 11, catY - 13); cx.lineTo(catX - 4, catY - 8); cx.closePath(); cx.fill();
+  cx.beginPath(); cx.moveTo(catX + 2, catY - 5); cx.lineTo(catX + 1, catY - 14); cx.lineTo(catX + 8, catY - 9); cx.closePath(); cx.fill();
+  cx.strokeStyle = "#050f13"; cx.lineWidth = 4; cx.lineCap = "round";
+  cx.beginPath(); cx.moveTo(catX - 11, catY); cx.quadraticCurveTo(catX - 20, catY + 2, catX - 19, catY - 8); cx.stroke();
+  cx.fillStyle = "rgba(255,180,84,0.8)";
+  cx.fillRect(catX - 4, catY - 3, 1.6, 1.6); cx.fillRect(catX + 2, catY - 3, 1.6, 1.6);
+  // lantern frame
+  const topY = baseY - lampH;
+  cx.strokeStyle = "#1c414b"; cx.lineWidth = 5;
+  cx.beginPath(); cx.moveTo(cxr - 34, baseY); cx.lineTo(cxr - 30, topY + 26); cx.moveTo(cxr + 34, baseY); cx.lineTo(cxr + 30, topY + 26); cx.stroke();
+  cx.fillStyle = "#1c414b";
+  cx.beginPath();
+  cx.moveTo(cxr - 44, topY + 28); cx.lineTo(cxr, topY - 14); cx.lineTo(cxr + 44, topY + 28); cx.closePath(); cx.fill();
+  cx.fillRect(cxr - 30, topY + 26, 60, 5);
+  // glow
+  const glowR = 60 + (F / 100) * 190 + flick * 6;
+  let g = cx.createRadialGradient(cxr, baseY - lampH * 0.45, 4, cxr, baseY - lampH * 0.45, glowR);
+  g.addColorStop(0, "rgba(255,196,110," + (0.5 + F / 260) + ")");
+  g.addColorStop(0.4, "rgba(255,164,70," + (0.16 + F / 500) + ")");
+  g.addColorStop(1, "rgba(255,164,70,0)");
+  cx.fillStyle = g; cx.beginPath(); cx.arc(cxr, baseY - lampH * 0.45, glowR, 0, 7); cx.fill();
+  // flame
+  const fy = baseY - 18;
+  const flut = (S.mode === "play" && S.t < S.gustUntil) ? flick * 14 : flick * 5;
+  g = cx.createRadialGradient(cxr, fy - fh * 0.5, 2, cxr, fy - fh * 0.5, fh);
+  g.addColorStop(0, "#fff7e0"); g.addColorStop(0.35, "#ffd98c"); g.addColorStop(0.75, "rgba(255,150,60,0.75)"); g.addColorStop(1, "rgba(255,120,40,0)");
+  cx.fillStyle = g;
+  cx.beginPath();
+  cx.moveTo(cxr, fy - fh + flut * 0.4);
+  cx.bezierCurveTo(cxr + fw, fy - fh * 0.55, cxr + fw * 0.9, fy - fh * 0.12, cxr, fy);
+  cx.bezierCurveTo(cxr - fw * 0.9, fy - fh * 0.12, cxr - fw, fy - fh * 0.55, cxr, fy - fh + flut * 0.4);
+  cx.fill();
+  // wick
+  cx.strokeStyle = "#3a2410"; cx.lineWidth = 3;
+  cx.beginPath(); cx.moveTo(cxr, fy); cx.lineTo(cxr, fy + 10); cx.stroke();
+  // low-oil warning
+  if (S.mode === "play" && S.F < 22){
+    cx.fillStyle = "rgba(255,90,60," + (0.35 + 0.3 * Math.sin(t * 6)) + ")";
+    cx.font = "11px Georgia"; cx.textAlign = "center";
+    cx.fillText("the flame is low", cxr, topY - 24);
+  }
+}
+
+/* ---------- game logic ---------- */
+function start(){
+  S.mode = "play"; S.t = 0; S.F = 55; S.feedCd = 0;
+  S.gustUntil = 0; S.nextGust = 8 + Math.random() * 6;
+  S.whaleX = -1; S.whaleNext = 38 + Math.random() * 18; S.jar = null;
+  S.drops = []; S.lastNight = 0;
+  $("title").style.display = "none"; $("over").style.display = "none";
+  hud.style.display = "flex";
+  nightN.textContent = 1;
+  say("Night one. Keep the wick trimmed.", 3000);
+}
+
+function gameOver(){
+  S.mode = "over";
+  const nights = Math.floor(S.t / NIGHT);
+  if (nights > S.best){ S.best = nights; try { localStorage.setItem("drift_lamp_best", String(nights)); } catch(e){} }
+  bestN.textContent = S.best; bestN2.textContent = S.best; scoreN.textContent = nights;
+  overLine.textContent = OVERLINES[Math.floor(Math.random() * OVERLINES.length)];
+  $("over").style.display = "flex";
+  hud.style.display = "none";
+  sfx.over();
+}
+
+function feed(){
+  if (S.mode !== "play") return;
+  const now = performance.now();
+  // jar catch takes priority
+  if (S.jar && now < S.jar.until){
+    S.jar = null; S.F = Math.min(100, S.F + 22);
+    say("The whale leaves a jar. The lamp drinks deep.", 3000);
+    sfx.catch();
+    return;
+  }
+  if (now < S.feedCd) return;
+  S.feedCd = now + 170;
+  S.F = Math.min(100, S.F + 16);
+  S.drops.push({ x: W / 2 + (Math.random() * 40 - 20), y: H * 0.30, life: 0.5 });
+  sfx.feed();
+}
+
+function update(dt){
+  if (S.mode !== "play") return;
+  S.t += dt;
+  // gusts
+  if (S.t >= S.nextGust && S.t >= S.gustUntil){
+    S.gustUntil = S.t + 1.2 + Math.random() * 1.2;
+    S.nextGust = S.t + 7 + Math.random() * 8;
+    say("The wind picks up. It does not knock.", 1800);
+    sfx.wind();
+  }
+  // whale
+  if (S.t >= S.whaleNext){
+    S.whaleX = 0; S.whaleDur = 6;
+    S.whaleNext = S.t + 45 + Math.random() * 30;
+    S.jar = { until: performance.now() + (1200 + 2600) }; // appears shortly after
+    setTimeout(() => { if (S.jar && S.mode === "play") say("Something small rides the whale's back.", 2600); }, 1200);
+  }
+  if (S.whaleX >= 0){
+    S.whaleX += dt / S.whaleDur;
+    if (S.whaleX > 1){ S.whaleX = -1; if (S.jar){ S.jar = null; say("The jar sinks. The whale does not apologize.", 3000); } }
+  }
+  // decay
+  const creep = Math.min(1, S.t / 240);
+  let decay = (2.8 + 0.075 * S.t) * (1 + creep * 0.5);
+  if (S.t < S.gustUntil) decay *= 2.2;
+  S.F -= decay * dt;
+  // night quips
+  const night = Math.floor(S.t / NIGHT) + 1;
+  if (night !== S.lastNight){
+    S.lastNight = night; nightN.textContent = night;
+    if (night > 1) say(QUIPS[(night - 2) % QUIPS.length], 3400);
+  }
+  if (S.F <= 0){ S.F = 0; gameOver(); }
+  // HUD
+  oilFill.style.width = S.F + "%";
+  oilFill.style.background = S.F < 22
+    ? "linear-gradient(90deg,#5a1c10,#ff6a4a)"
+    : "linear-gradient(90deg,#7a4d12,#ffb454,#ffe1a8)";
+  // event fade
+  if (performance.now() > S.msgUntil) eventEl.style.opacity = 0;
+}
+
+/* ---------- loop ---------- */
+let last = performance.now();
+function loop(ts){
+  const dt = Math.min(0.05, (ts - last) / 1000); last = ts;
+  update(dt);
+  draw(ts, dt);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* ---------- input ---------- */
+function onDown(e){
+  if (e.target.tagName === "BUTTON") return;
+  if (S.mode === "title"){ start(); return; }
+  if (S.mode === "over") return; // button only
+  feed();
+  if (e.cancelable) e.preventDefault();
+}
+addEventListener("pointerdown", onDown);
+addEventListener("keydown", e => {
+  if (e.code === "Space" || e.code === "Enter"){
+    e.preventDefault();
+    if (S.mode === "title") start();
+    else if (S.mode === "over") start();
+    else feed();
+  }
+});
+$("start-btn").addEventListener("click", e => { e.stopPropagation(); start(); });
+$("again-btn").addEventListener("click", e => { e.stopPropagation(); start(); });
+
+/* debug hook (used by the agent's Playwright checks) */
+window.__lamp = {
+  state: () => ({ mode: S.mode, t: +S.t.toFixed(2), F: +S.F.toFixed(1), best: S.best }),
+  feed, start, setFlame: v => { S.F = Math.max(0, Math.min(100, v)); }
+};
+</script>
+</body>
+</html>
