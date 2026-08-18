@@ -99,7 +99,12 @@ const cx = cv.getContext("2d");
 let W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2);
 function size(){
   W = innerWidth; H = innerHeight;
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
   cv.width = W * DPR; cv.height = H * DPR;
+  // pin the CSS box to the viewport — without this the canvas falls back to
+  // its intrinsic (W*DPR) size and overflows, so on hi-DPI phones only the
+  // top-left corner of the scene is visible (lamp ends up off-screen).
+  cv.style.width = W + "px"; cv.style.height = H + "px";
   cx.setTransform(DPR, 0, 0, DPR, 0, 0);
 }
 addEventListener("resize", size); size();
