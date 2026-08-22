@@ -51,7 +51,13 @@ button.go:hover{transform:translateY(-2px)}
 .fine{position:fixed;bottom:14px;left:0;right:0;z-index:11;font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:#5f7270;text-align:center;pointer-events:none}
 </style>
 
-<script async src="https://va.vercel-scripts.com/v1/fgmgDpFOB7DLi1jFQrBlPWoqp.js"></script></head>
+<script>
+// Vercel Web Analytics (self-hosted; tracks on vercel.app only)
+if (location.hostname.endsWith(".vercel.app")) {
+  var s = document.createElement("script"); s.async = true;
+  s.src = "/_vercel/insights/script.js"; document.head.appendChild(s);
+}
+</script></head>
 <body>
 <canvas id="sea"></canvas>
 
