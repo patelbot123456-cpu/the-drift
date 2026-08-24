@@ -1,0 +1,8 @@
+/* The Drift — design tokens.
+   Single source of truth for the palette. style.css @imports this file;
+   404.html and lamp.html link it. Change a color HERE, once, and every page follows. */
+:root{
+  --ink:#241a10; --ink-soft:#4a3a28;
+  --paper:#ece0c8; --paper-2:#e3d5b8;
+  --navy:#081418; --teal:#4be0d2; --amber:#ffb454; --amber-dim:#c98a3e;
+}

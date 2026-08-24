@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Drift — Lost at Sea</title>
+<meta name="description" content="This page drifted out with the tide.">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="style.css">
+<style>
+.lost{min-height:78vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:110px 20px 40px}
+.lost .no404{font-size:clamp(64px,14vw,120px);font-weight:400;letter-spacing:.08em;color:#f5ecd9;line-height:1;text-shadow:0 4px 40px rgba(0,0,0,.7)}
+.lost .no404 em{font-style:italic;color:var(--teal);text-shadow:0 0 30px rgba(75,224,210,.45)}
+.lost .kicker{margin-top:22px}
+.lost p{margin-top:16px;font-style:italic;font-size:clamp(15px,2.4vw,19px);color:#cfd8d4;max-width:520px;line-height:1.7;text-shadow:0 2px 12px rgba(0,0,0,.8)}
+.lost a.home{display:inline-block;margin-top:30px;padding:11px 20px;border:1px solid rgba(255,180,84,.55);border-radius:2px;
+  color:var(--amber);font-size:12px;letter-spacing:.3em;text-transform:uppercase;text-decoration:none;background:rgba(8,20,24,.55);
+  transition:transform .15s,border-color .15s}
+.lost a.home:hover{transform:translateY(-2px);border-color:rgba(255,180,84,.9)}
+</style>
+
+<script>
+// Vercel Web Analytics (self-hosted; tracks on vercel.app only)
+if (location.hostname.endsWith(".vercel.app")) {
+  var s = document.createElement("script"); s.async = true;
+  s.src = "/_vercel/insights/script.js"; document.head.appendChild(s);
+}
+</script></head>
+<body>
+<canvas id="motes"></canvas>
+<nav class="topnav">
+  <span class="brand">🏮 <b>THE DRIFT</b></span>
+  <span class="nav-links"><a href="./">Lamp Log</a><a href="history.html">History</a><a href="archive.html">Archive</a><a href="lamp.html">The Ninth Lamp</a></span>
+</nav>
+<div class="lost">
+  <div class="no404">4<em>0</em>4</div>
+  <div class="kicker">Not in the Lamp Log</div>
+  <p>This page drifted out with the tide. The sea does not keep what it loses — but the log keeps everything else.</p>
+  <a class="home" href="./">Return to the Lamp Log</a>
+</div>
+<script src="drift.js"></script>
+</body>
+</html>
