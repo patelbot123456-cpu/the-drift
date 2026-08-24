@@ -71,6 +71,15 @@ section{padding:64px 0 8px}
   color:var(--amber);background:var(--navy);padding:0 12px;font-size:16px}
 .entry h3{font-size:clamp(22px,3.6vw,30px);font-weight:400;font-style:italic;color:var(--ink);line-height:1.25}
 .entry .meta{margin:12px 0 26px;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft)}
+/* share button (item #9): in-theme, ≥44 px tap target on phones */
+.share-btn{display:inline-block;margin-left:14px;padding:8px 14px;border:1px solid var(--amber-dim);border-radius:4px;
+  background:rgba(255,180,84,.08);color:var(--amber-dim);font-family:inherit;font-size:11px;letter-spacing:.18em;
+  text-transform:uppercase;cursor:pointer;transition:background .15s,color .15s,border-color .15s;vertical-align:middle}
+.share-btn:hover{background:rgba(255,180,84,.18);color:var(--ink-soft);border-color:var(--ink-soft)}
+.share-btn.copied{background:var(--amber);color:var(--navy);border-color:var(--amber)}
+/* archive NEW badge (item #9) */
+.badge-new{font-size:9px;letter-spacing:.25em;color:var(--navy);background:var(--amber);border-radius:3px;
+  padding:3px 7px;margin-right:10px;font-weight:bold}
 .entry figure{margin:30px 0;border:6px solid #fff;outline:1px solid #b49b6e;
   box-shadow:0 14px 34px rgba(0,0,0,.35);transform:rotate(-.6deg);border-radius:2px;overflow:hidden}
 .entry figure img{display:block;width:100%}
@@ -233,6 +242,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
   .topnav{flex-wrap:wrap;row-gap:4px}
   /* bigger tap targets on phones: padding grows the hit area, not the glyphs */
   .topnav .nav-links a{padding:7px 0}
+  .share-btn{display:inline-flex;align-items:center;min-height:44px;padding:10px 16px;margin-left:0;margin-top:10px}
   .entry .meta{letter-spacing:.12em}
   .pager-row{flex-direction:column;gap:12px}
   .report h3{letter-spacing:.28em}

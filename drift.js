@@ -101,6 +101,54 @@ if(el("place-btn")) el("place-btn").onclick=()=>{
   try{ localStorage.setItem(KEY, JSON.stringify({no:no, date:date})); }catch(e){}
 })();
 
+/* ---- per-entry share button (improvement-plan #9) ----
+   Copies the absolute entry URL to the clipboard; "Copied" state is visible.
+   navigator.clipboard first, execCommand fallback (non-secure contexts,
+   blocked clipboard). If the view beacon is baked in (window.__driftView)
+   and enabled for this host, one share_click event goes to the beacon. */
+(function(){
+  const btn=document.getElementById("share-btn");
+  if(!btn) return;
+  function url(){
+    const b=document.body;
+    const lr=document.getElementById("lastread");
+    const no=parseInt(b.getAttribute("data-entry-no"),10);
+    const date=(b.getAttribute("data-entry-date")||"").replace(/-/g,"");
+    const latest=lr?parseInt(lr.getAttribute("data-latest"),10):NaN;
+    return (no===latest)? location.origin+"/" : location.origin+"/entry-"+date+"/";
+  }
+  function beacon(ev){
+    try{
+      const C=(window.__driftAds||{});
+      if(!C||!C.beacon) return;
+      const path=(location.pathname||"/").replace(/\/$/,"")||"/";
+      const body=JSON.stringify({ts:new Date().toISOString(),event:ev,path:path,host:location.hostname,session:localStorage.getItem("drift_sid")||""});
+      if(navigator.sendBeacon) navigator.sendBeacon(C.url,new Blob([body],{type:"application/json"}));
+    }catch(e){}
+  }
+  function done(ok){
+    if(!ok) return;
+    btn.classList.add("copied");
+    const old=btn.textContent;
+    btn.textContent="Copied";
+    beacon("share_click");
+    setTimeout(()=>{ btn.classList.remove("copied"); btn.textContent=old; },2000);
+  }
+  btn.onclick=()=>{
+    const u=url();
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(u).then(()=>done(true),()=>fallback());
+    } else fallback();
+    function fallback(){
+      const t=document.createElement("textarea");
+      t.value=u; t.setAttribute("readonly",""); t.style.position="fixed"; t.style.opacity="0";
+      document.body.appendChild(t); t.select();
+      let ok=false; try{ ok=document.execCommand("copy"); }catch(e){}
+      t.remove(); done(ok);
+    }
+  };
+})();
+
 /* ---- footer ad slot: consent, injection, failure fallback, impression ----
    Config is baked in by the build as window.__driftAds (deterministic).
    No third-party ad script is ever in the initial HTML: it is injected here,
