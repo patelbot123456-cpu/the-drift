@@ -231,6 +231,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
   .topnav .nav-links a:last-child{margin-right:0}
   /* wrap the row if the viewport is narrow enough that it cannot fit on one */
   .topnav{flex-wrap:wrap;row-gap:4px}
+  /* bigger tap targets on phones: padding grows the hit area, not the glyphs */
+  .topnav .nav-links a{padding:7px 0}
   .entry .meta{letter-spacing:.12em}
   .pager-row{flex-direction:column;gap:12px}
   .report h3{letter-spacing:.28em}
